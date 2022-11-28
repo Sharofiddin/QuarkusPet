@@ -7,10 +7,10 @@ import java.util.Set;
 
 import javax.annotation.PostConstruct;
 import javax.ws.rs.GET;
-import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 
 import uz.learn.objects.Account;
@@ -31,7 +31,7 @@ public class AccountResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Account getAccount(@PathParam("accountNumber") Long accountNumber) {
 		Optional<Account> response = accounts.stream().filter(acc->acc.getAccountNumber().equals(accountNumber)).findFirst();
-		return response.orElseThrow(()->new NotFoundException("Account with id of " + accountNumber + " does not exist."));
+		return response.orElseThrow(()->new WebApplicationException("Account with id of " + accountNumber + " does not exist."));
 	}
 	
 	@PostConstruct
