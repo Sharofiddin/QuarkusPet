@@ -52,8 +52,8 @@ If you want to learn more about building native executables, please consult http
 
 ## Provided Code
 
-### RESTEasy Reactive
+### RESTEasy
 
-Easily start your Reactive RESTful Web Services
+Easily start your RESTful Web Services
 
-[Related guide section...](https://quarkus.io/guides/getting-started-reactive#reactive-jax-rs-resources)
+[Related guide section...](https://quarkus.io/guides/getting-started#jax-rs-resources)
