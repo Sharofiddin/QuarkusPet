@@ -1,6 +1,7 @@
 package uz.learn.objects;
 
 import java.math.BigDecimal;
+import java.util.Objects;
 
 public class Account {
 	public Long accountNumber;
@@ -57,4 +58,18 @@ public class Account {
 		return accountStatus;
 	}	
 	
+	@Override
+	public boolean equals(Object obj) {
+		if(obj == null) return false;
+		if(obj instanceof Account acc) {
+			return acc.getAccountNumber().equals(accountNumber) && acc.customerNumber.equals(customerNumber);
+		}else {
+			return false;
+		}
+	}
+	
+	@Override
+	public int hashCode() {
+		return Objects.hash(accountNumber,customerNumber);
+	}
 }
