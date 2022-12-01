@@ -8,6 +8,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.text.IsEmptyString.emptyString;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -58,8 +59,8 @@ class AccountResourceTest {
 	@Order(3)
 	void testCreateAccount() {
 		Account newAccount = new Account(125L, 135L, "Yusef Rubab", BigDecimal.valueOf(180.0d));
-		Account returnedAccount = given().contentType(ContentType.JSON).body(newAccount).post("/accounts").then().statusCode(201).extract()
-				.as(Account.class);
+		Account returnedAccount = given().contentType(ContentType.JSON).body(newAccount).post("/accounts").then()
+				.statusCode(201).extract().as(Account.class);
 		assertThat(returnedAccount, notNullValue());
 		assertThat(returnedAccount, equalTo(newAccount));
 		Response result = given().when().get("/accounts").then().statusCode(200)
@@ -70,5 +71,22 @@ class AccountResourceTest {
 		List<Account> accounts = result.jsonPath().getList("$");
 		assertThat(accounts, not(empty()));
 		assertThat(accounts, hasSize(5));
+	}
+
+	@DisplayName("Delete account test")
+	@Test
+	@Order(4)
+	void testDeleteAccount() {
+		Response response = given().delete("/accounts/{accountNumber}", 125L).then().statusCode(204).extract()
+				.response();
+		assertThat(response.getBody().asString(), emptyString());
+		Response result = given().when().get("/accounts").then().statusCode(200)
+				.body(containsString("Frode Aleks"), containsString("Gautvin Marianne"),
+						containsString("Gallus Zakaria"), containsString("Norbert Thijmen"),
+						not(containsString("Yusef Rubab")))
+				.extract().response();
+		List<Account> accounts = result.jsonPath().getList("$");
+		assertThat(accounts, not(empty()));
+		assertThat(accounts, hasSize(4));
 	}
 }
