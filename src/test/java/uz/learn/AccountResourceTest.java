@@ -3,6 +3,7 @@ package uz.learn;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.comparesEqualTo;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
@@ -89,4 +90,29 @@ class AccountResourceTest {
 		assertThat(accounts, not(empty()));
 		assertThat(accounts, hasSize(4));
 	}
+
+	@DisplayName("withdrawal account test")
+	@Test
+	@Order(5)
+	void testAccountWithdrawal() {
+		Account account = given().body("25").put("/accounts/{accountNumber}/withdrawal", 121L).then().statusCode(200)
+				.extract().as(Account.class);
+		assertThat(account.getBalance(), comparesEqualTo(BigDecimal.valueOf(50)));
+		Account accountAfterWithdrawal = given().when().get("/accounts/{accountNumber}", 121L).then().statusCode(200)
+				.extract().as(Account.class);
+		assertThat(account.getBalance(), comparesEqualTo(accountAfterWithdrawal.getBalance()));
+	}
+
+	@DisplayName("Deposit account test")
+	@Test
+	@Order(6)
+	void testAccountDeposit() {
+		Account account = given().body("25").put("/accounts/{accountNumber}/deposit", 121L).then().statusCode(200)
+				.extract().as(Account.class);
+		assertThat(account.getBalance(), comparesEqualTo(BigDecimal.valueOf(75)));
+		Account accountAfterWithdrawal = given().when().get("/accounts/{accountNumber}", 121L).then().statusCode(200)
+				.extract().as(Account.class);
+		assertThat(account.getBalance(), comparesEqualTo(accountAfterWithdrawal.getBalance()));
+	}
+
 }
