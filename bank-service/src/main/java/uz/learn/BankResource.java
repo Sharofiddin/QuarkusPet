@@ -21,13 +21,19 @@ import uz.learn.config.BankSupportConfigMapping;
 public class BankResource {
 
 	@ConfigProperty(name = "bank.name", defaultValue = "Bank of Default")
-	private String name;
+	String name;
 
 	@ConfigProperty(name = "app.mobileBanking")
-	private Optional<Boolean> mobileBanking;
+	Optional<Boolean> mobileBanking;
 
 	@ConfigProperties(prefix = "bank-support")
 	BankSupportConfig bankSupportConfig;
+	
+	@ConfigProperty(name = "username")
+	String username;
+	
+	@ConfigProperty(name = "password")
+	String password;
 	
 	@Inject
 	BankSupportConfigMapping bankSupportMapping;
@@ -66,5 +72,15 @@ public class BankResource {
 		support.put("business.email", bankSupportMapping.business().email());
 		support.put("business.phone", bankSupportMapping.business().phone());
 		return support;
+	}
+	
+	@GET
+	@Path("/secret")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Map<String, String> secret(){
+		Map<String, String> secret = new HashMap<>();
+		secret.put("username", username);
+		secret.put("password", password);
+		return secret;
 	}
 }

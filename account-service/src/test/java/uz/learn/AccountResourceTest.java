@@ -30,6 +30,8 @@ import uz.learn.objects.AccountStatus;
 @TestMethodOrder(OrderAnnotation.class)
 class AccountResourceTest {
 
+	private static final int SIZE = 4;
+
 	@DisplayName("Retrieve all accounts")
 	@Test
 	@Order(1)
@@ -39,7 +41,7 @@ class AccountResourceTest {
 				.extract().response();
 		List<Account> accounts = result.jsonPath().getList("$");
 		assertThat(accounts, not(empty()));
-		assertThat(accounts, hasSize(4));
+		assertThat(accounts, hasSize(SIZE));
 	}
 
 	@DisplayName("Get account by id")
@@ -71,7 +73,7 @@ class AccountResourceTest {
 				.extract().response();
 		List<Account> accounts = result.jsonPath().getList("$");
 		assertThat(accounts, not(empty()));
-		assertThat(accounts, hasSize(5));
+		assertThat(accounts, hasSize(SIZE+1));
 	}
 
 	@DisplayName("Delete account test")
@@ -88,7 +90,7 @@ class AccountResourceTest {
 				.extract().response();
 		List<Account> accounts = result.jsonPath().getList("$");
 		assertThat(accounts, not(empty()));
-		assertThat(accounts, hasSize(4));
+		assertThat(accounts, hasSize(SIZE));
 	}
 
 	@DisplayName("withdrawal account test")
