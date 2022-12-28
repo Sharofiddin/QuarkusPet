@@ -2,8 +2,8 @@ package uz.learn;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.comparesEqualTo;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
@@ -61,7 +61,7 @@ class AccountResourceTest {
 	@Test
 	@Order(3)
 	void testCreateAccount() {
-		Account newAccount = new Account(125L, 135L, "Yusef Rubab", BigDecimal.valueOf(180.0d));
+		Account newAccount = new Account();
 		Account returnedAccount = given().contentType(ContentType.JSON).body(newAccount).post("/accounts").then()
 				.statusCode(201).extract().as(Account.class);
 		assertThat(returnedAccount, notNullValue());

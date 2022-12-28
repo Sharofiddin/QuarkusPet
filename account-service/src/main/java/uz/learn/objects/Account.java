@@ -3,23 +3,58 @@ package uz.learn.objects;
 import java.math.BigDecimal;
 import java.util.Objects;
 
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.NamedQuery;
+import javax.persistence.SequenceGenerator;
+@Entity
+@NamedQuery(name = "Accounts.findAll", query="SELECT a FROM Account a ORDER BY a.accountNumber")
+@NamedQuery(name = "Accounts.findByAccountNumber", query="SELECT a FROM Account a WHERE a.accountNumber=:accountNumber")
 public class Account {
-	public Long accountNumber;
-	public String customerName;
-	public Long customerNumber;
-	public BigDecimal balance;
-	public AccountStatus accountStatus = AccountStatus.OPEN;
+	@Id
+	@SequenceGenerator(name="accountsSequence", sequenceName = "account_id_seq", initialValue = 10, allocationSize = 1)
+	@GeneratedValue(generator = "accountsSequence", strategy = GenerationType.SEQUENCE)
+	private Long id;
+	private Long accountNumber;
+	private String customerName;
+	private Long customerNumber;
+	private BigDecimal balance;
+	private AccountStatus accountStatus = AccountStatus.OPEN;
 
-	public Account(Long accountNumber, Long customerNumber, String customerName, BigDecimal balance) {
-		this.accountNumber = accountNumber;
-		this.customerName = customerName;
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public Long getCustomerNumber() {
+		return customerNumber;
+	}
+
+	public void setCustomerNumber(Long customerNumber) {
 		this.customerNumber = customerNumber;
+	}
+
+	public void setAccountNumber(Long accountNumber) {
+		this.accountNumber = accountNumber;
+	}
+
+	public void setCustomerName(String customerName) {
+		this.customerName = customerName;
+	}
+
+	public void setBalance(BigDecimal balance) {
 		this.balance = balance;
 	}
 
-	public Account() {
+	public void setAccountStatus(AccountStatus accountStatus) {
+		this.accountStatus = accountStatus;
 	}
-	
+
 	public void markOverdrawn() {
 		this.accountStatus = AccountStatus.OVERDRAWN;
 	}
