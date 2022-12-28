@@ -29,7 +29,7 @@ public class AccountResource {
 	
 	@Provider
 	public static class ErrorMapper implements ExceptionMapper<Exception> {
-
+	
 		@Override
 		public Response toResponse(Exception exception) {
 			int code = 500;
