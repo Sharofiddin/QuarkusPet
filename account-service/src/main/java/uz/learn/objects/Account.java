@@ -3,6 +3,7 @@ package uz.learn.objects;
 import java.math.BigDecimal;
 import java.util.Objects;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -17,10 +18,19 @@ public class Account {
 	@SequenceGenerator(name="accountsSequence", sequenceName = "account_id_seq", initialValue = 10, allocationSize = 1)
 	@GeneratedValue(generator = "accountsSequence", strategy = GenerationType.SEQUENCE)
 	private Long id;
+	
+	@Column(name = "account_number")
 	private Long accountNumber;
+	
+	@Column(name = "customer_name")
 	private String customerName;
+	
+	@Column(name = "customer_number")
 	private Long customerNumber;
+	
 	private BigDecimal balance;
+	
+	@Column(name = "account_status")
 	private AccountStatus accountStatus = AccountStatus.OPEN;
 
 	public Long getId() {

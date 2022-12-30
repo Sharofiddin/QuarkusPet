@@ -10,6 +10,7 @@ import javax.json.Json;
 import javax.json.JsonObjectBuilder;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
+import javax.transaction.Transactional;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -55,24 +56,27 @@ public class AccountResource {
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
+	@Transactional
 	public Response createAccount(Account account) {
 		if (account.getAccountNumber() == null) {
 			throw new WebApplicationException("Account id is not specified", 400);
 		}
-		accounts.add(account);
+		entityManager.persist(account);
 		return Response.status(201).entity(account).build();
 	}
 
 	@PUT
 	@Path("/{accountNumber}/withdrawal")
+	@Transactional
 	public Account withdrawal(@PathParam("accountNumber") Long accountNumber, String amount) {
-		Account account = getAccount(accountNumber);
-		account.withdrawFunds(new BigDecimal(amount));
-		return account;
+		Account entity = getAccount(accountNumber);
+		entity.withdrawFunds(new BigDecimal(amount));
+		return entity;
 	}
 
 	@PUT
 	@Path("/{accountNumber}/deposit")
+	@Transactional
 	public Account deposit(@PathParam("accountNumber") Long accountNumber, String amount) {
 		Account account = getAccount(accountNumber);
 		account.addFunds(new BigDecimal(amount));

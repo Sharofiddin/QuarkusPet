@@ -20,6 +20,8 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
+import io.quarkus.test.common.QuarkusTestResource;
+import io.quarkus.test.h2.H2DatabaseTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
@@ -27,10 +29,11 @@ import uz.learn.objects.Account;
 import uz.learn.objects.AccountStatus;
 
 @QuarkusTest
+@QuarkusTestResource(value = H2DatabaseTestResource.class)
 @TestMethodOrder(OrderAnnotation.class)
 class AccountResourceTest {
 
-	private static final int SIZE = 4;
+	private static final int SIZE = 6;
 
 	@DisplayName("Retrieve all accounts")
 	@Test
