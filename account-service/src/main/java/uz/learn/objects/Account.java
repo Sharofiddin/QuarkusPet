@@ -13,6 +13,7 @@ import javax.persistence.SequenceGenerator;
 @Entity
 @NamedQuery(name = "Accounts.findAll", query="SELECT a FROM Account a ORDER BY a.accountNumber")
 @NamedQuery(name = "Accounts.findByAccountNumber", query="SELECT a FROM Account a WHERE a.accountNumber=:accountNumber")
+@NamedQuery(name = "Accounts.deleteByAccountNumber", query="DELETE FROM Account a WHERE a.accountNumber=:accountNumber")
 public class Account {
 	@Id
 	@SequenceGenerator(name="accountsSequence", sequenceName = "account_id_seq", initialValue = 10, allocationSize = 1)

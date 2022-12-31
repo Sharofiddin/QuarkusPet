@@ -1,9 +1,7 @@
 package uz.learn;
 
 import java.math.BigDecimal;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import javax.inject.Inject;
 import javax.json.Json;
@@ -33,8 +31,6 @@ public class AccountResource {
 	@Inject
 	EntityManager entityManager;
 
-	private Set<Account> accounts = new HashSet<>();
-
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	public List<Account> allAccounts() {
@@ -46,7 +42,7 @@ public class AccountResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Account getAccount(@PathParam("accountNumber") Long accountNumber) {
 		try {
-			return entityManager.createNamedQuery("Accounts.findByAccounNumber", Account.class)
+			return entityManager.createNamedQuery("Accounts.findByAccountNumber", Account.class)
 					.setParameter("accountNumber", accountNumber).getSingleResult();
 		} catch (NoResultException e) {
 			throw new WebApplicationException("Account with id of " + accountNumber + " does not exist.", 404);
@@ -85,8 +81,11 @@ public class AccountResource {
 
 	@DELETE
 	@Path("/{accountNumber}")
+	@Transactional
 	public Response delete(@PathParam("accountNumber") Long accountNumber) {
-		accounts.removeIf(acc -> acc.getAccountNumber().equals(accountNumber));
+		int executeUpdate = entityManager.createNamedQuery("Accounts.deleteByAccountNumber").setParameter("accountNumber", accountNumber)
+				.executeUpdate();
+		System.out.printf("Deleted + %d account(s)%n", executeUpdate);
 		return Response.noContent().build();
 	}
 

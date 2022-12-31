@@ -51,12 +51,12 @@ class AccountResourceTest {
 	@Test
 	@Order(2)
 	void testGetAccountById() {
-		Account account = given().when().get("/accounts/{accountNumber}", 121).then().statusCode(200).extract()
+		Account account = given().when().get("/accounts/{accountNumber}", 777888999L).then().statusCode(200).extract()
 				.as(Account.class);
 
-		assertThat(account.getAccountNumber(), equalTo(121L));
+		assertThat(account.getAccountNumber(), equalTo(777888999L));
 		assertThat(account.getCustomerName(), equalTo("Gallus Zakaria"));
-		assertThat(account.getBalance(), equalTo(BigDecimal.valueOf(75.0)));
+		assertThat(account.getBalance(), equalTo(BigDecimal.valueOf(480.56)));
 		assertThat(account.getAccountStatus(), equalTo(AccountStatus.OPEN));
 	}
 
@@ -65,6 +65,11 @@ class AccountResourceTest {
 	@Order(3)
 	void testCreateAccount() {
 		Account newAccount = new Account();
+		newAccount.setAccountNumber(88899977L);
+		newAccount.setAccountStatus(AccountStatus.OPEN);
+		newAccount.setBalance(BigDecimal.valueOf(100.05f));
+		newAccount.setCustomerName("Kelechi Oghenekevwe");
+		newAccount.setCustomerNumber(18144L);
 		Account returnedAccount = given().contentType(ContentType.JSON).body(newAccount).post("/accounts").then()
 				.statusCode(201).extract().as(Account.class);
 		assertThat(returnedAccount, notNullValue());
@@ -83,13 +88,13 @@ class AccountResourceTest {
 	@Test
 	@Order(4)
 	void testDeleteAccount() {
-		Response response = given().delete("/accounts/{accountNumber}", 125L).then().statusCode(204).extract()
+		Response response = given().delete("/accounts/{accountNumber}", 88899977L).then().statusCode(204).extract()
 				.response();
 		assertThat(response.getBody().asString(), emptyString());
 		Response result = given().when().get("/accounts").then().statusCode(200)
 				.body(containsString("Frode Aleks"), containsString("Gautvin Marianne"),
 						containsString("Gallus Zakaria"), containsString("Norbert Thijmen"),
-						not(containsString("Yusef Rubab")))
+						not(containsString("Kelechi Oghenekevwe")))
 				.extract().response();
 		List<Account> accounts = result.jsonPath().getList("$");
 		assertThat(accounts, not(empty()));
@@ -100,10 +105,10 @@ class AccountResourceTest {
 	@Test
 	@Order(5)
 	void testAccountWithdrawal() {
-		Account account = given().body("25").put("/accounts/{accountNumber}/withdrawal", 121L).then().statusCode(200)
+		Account account = given().body("25").put("/accounts/{accountNumber}/withdrawal", 123456789L).then().statusCode(200)
 				.extract().as(Account.class);
-		assertThat(account.getBalance(), comparesEqualTo(BigDecimal.valueOf(50)));
-		Account accountAfterWithdrawal = given().when().get("/accounts/{accountNumber}", 121L).then().statusCode(200)
+		assertThat(account.getBalance(), comparesEqualTo(BigDecimal.valueOf(525.78)));
+		Account accountAfterWithdrawal = given().when().get("/accounts/{accountNumber}", 123456789L).then().statusCode(200)
 				.extract().as(Account.class);
 		assertThat(account.getBalance(), comparesEqualTo(accountAfterWithdrawal.getBalance()));
 	}
@@ -112,10 +117,10 @@ class AccountResourceTest {
 	@Test
 	@Order(6)
 	void testAccountDeposit() {
-		Account account = given().body("25").put("/accounts/{accountNumber}/deposit", 121L).then().statusCode(200)
+		Account account = given().body("25").put("/accounts/{accountNumber}/deposit", 123456789L).then().statusCode(200)
 				.extract().as(Account.class);
-		assertThat(account.getBalance(), comparesEqualTo(BigDecimal.valueOf(75)));
-		Account accountAfterWithdrawal = given().when().get("/accounts/{accountNumber}", 121L).then().statusCode(200)
+		assertThat(account.getBalance(), comparesEqualTo(BigDecimal.valueOf(550.78)));
+		Account accountAfterWithdrawal = given().when().get("/accounts/{accountNumber}", 123456789L).then().statusCode(200)
 				.extract().as(Account.class);
 		assertThat(account.getBalance(), comparesEqualTo(accountAfterWithdrawal.getBalance()));
 	}
