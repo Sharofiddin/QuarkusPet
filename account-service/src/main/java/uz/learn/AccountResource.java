@@ -2,6 +2,7 @@ package uz.learn;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 import javax.inject.Inject;
 import javax.json.Json;
@@ -17,12 +18,15 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
 import uz.learn.objects.Account;
+import uz.learn.objects.AccountStatus;
 import uz.learn.repository.AccountRepository;
 
 @Path("/accounts")
@@ -37,6 +41,36 @@ public class AccountResource {
 		return accountRepository.listAll();
 	}
 
+	 @GET
+	  @Path("/{acctNumber}/balance")
+	  public BigDecimal getBalance(@PathParam("acctNumber") Long accountNumber) {
+	    Account account = accountRepository.findByAccountNumber(accountNumber);
+
+	    if (account == null) {
+	      throw new WebApplicationException("Account with " + accountNumber + " does not exist.", 404);
+	    }
+
+	    return account.getBalance();
+	  }
+
+	  @POST
+	  @Path("{accountNumber}/transaction")
+	  @Transactional
+	  public Map<String, List<String>> transact(@Context HttpHeaders headers, @PathParam("accountNumber") Long accountNumber, BigDecimal amount) {
+	    Account entity = accountRepository.findByAccountNumber(accountNumber);
+
+	    if (entity == null) {
+	      throw new WebApplicationException("Account with " + accountNumber + " does not exist.", 404);
+	    }
+
+	    if (entity.getAccountStatus().equals(AccountStatus.OVERDRAWN)) {
+	      throw new WebApplicationException("Account is overdrawn, no further withdrawals permitted", 409);
+	    }
+
+	    entity.setBalance(entity.getBalance().add(amount));
+	    return headers.getRequestHeaders();
+	  }
+	
 	@GET
 	@Path("/{accountNumber}")
 	@Produces(MediaType.APPLICATION_JSON)
