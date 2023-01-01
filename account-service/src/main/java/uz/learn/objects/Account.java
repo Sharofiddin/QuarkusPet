@@ -8,16 +8,14 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.NamedQuery;
 import javax.persistence.SequenceGenerator;
 @Entity
-@NamedQuery(name = "Accounts.findAll", query="SELECT a FROM Account a ORDER BY a.accountNumber")
-@NamedQuery(name = "Accounts.findByAccountNumber", query="SELECT a FROM Account a WHERE a.accountNumber=:accountNumber")
-@NamedQuery(name = "Accounts.deleteByAccountNumber", query="DELETE FROM Account a WHERE a.accountNumber=:accountNumber")
 public class Account {
 	@Id
-	@SequenceGenerator(name="accountsSequence", sequenceName = "account_id_seq", initialValue = 10, allocationSize = 1)
-	@GeneratedValue(generator = "accountsSequence", strategy = GenerationType.SEQUENCE)
+	 @SequenceGenerator(name = "accountsSequence", sequenceName = "accounts_id_seq",
+	    allocationSize = 1, initialValue = 10)
+	  @GeneratedValue(strategy = GenerationType.SEQUENCE,
+	    generator = "accountsSequence")
 	private Long id;
 	
 	@Column(name = "account_number")

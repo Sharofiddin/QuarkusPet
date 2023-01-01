@@ -6,7 +6,6 @@ import java.util.List;
 import javax.inject.Inject;
 import javax.json.Json;
 import javax.json.JsonObjectBuilder;
-import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.transaction.Transactional;
 import javax.ws.rs.Consumes;
@@ -24,17 +23,18 @@ import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
 import uz.learn.objects.Account;
+import uz.learn.repository.AccountRepository;
 
 @Path("/accounts")
 public class AccountResource {
 
 	@Inject
-	EntityManager entityManager;
+	AccountRepository accountRepository;
 
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	public List<Account> allAccounts() {
-		return entityManager.createNamedQuery("Accounts.findAll", Account.class).getResultList();
+		return accountRepository.listAll();
 	}
 
 	@GET
@@ -42,8 +42,7 @@ public class AccountResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Account getAccount(@PathParam("accountNumber") Long accountNumber) {
 		try {
-			return entityManager.createNamedQuery("Accounts.findByAccountNumber", Account.class)
-					.setParameter("accountNumber", accountNumber).getSingleResult();
+			return accountRepository.findByAccountNumber(accountNumber);
 		} catch (NoResultException e) {
 			throw new WebApplicationException("Account with id of " + accountNumber + " does not exist.", 404);
 		}
@@ -57,7 +56,7 @@ public class AccountResource {
 		if (account.getAccountNumber() == null) {
 			throw new WebApplicationException("Account id is not specified", 400);
 		}
-		entityManager.persist(account);
+		accountRepository.persist(account);
 		return Response.status(201).entity(account).build();
 	}
 
@@ -83,9 +82,7 @@ public class AccountResource {
 	@Path("/{accountNumber}")
 	@Transactional
 	public Response delete(@PathParam("accountNumber") Long accountNumber) {
-		int executeUpdate = entityManager.createNamedQuery("Accounts.deleteByAccountNumber").setParameter("accountNumber", accountNumber)
-				.executeUpdate();
-		System.out.printf("Deleted + %d account(s)%n", executeUpdate);
+		accountRepository.delete(accountRepository.findByAccountNumber(accountNumber));
 		return Response.noContent().build();
 	}
 
