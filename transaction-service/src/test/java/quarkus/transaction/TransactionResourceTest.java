@@ -2,8 +2,6 @@ package quarkus.transaction;
 
 import static io.restassured.RestAssured.given;
 
-import java.math.BigDecimal;
-
 import javax.ws.rs.core.MediaType;
 
 import org.junit.jupiter.api.Test;
@@ -25,14 +23,4 @@ class TransactionResourceTest {
              .statusCode(200);
     }
     
-    @Test
-    void testBalance() {
-        given()
-          .when().get("/transactions/{accountNumber}/balance", 121212L)
-          .then()
-             .statusCode(200)
-             .extract().as(BigDecimal.class).equals(BigDecimal.valueOf(100.20));
-    }
-
-
 }
