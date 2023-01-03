@@ -4,6 +4,7 @@ import static io.restassured.RestAssured.given;
 
 import javax.ws.rs.core.MediaType;
 
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 
 import io.quarkus.test.common.QuarkusTestResource;
@@ -20,7 +21,7 @@ class TransactionResourceTest {
         .contentType(MediaType.APPLICATION_JSON)
           .when().post("/transactions/{accountNumber}", 121212L)
           .then()
-             .statusCode(200);
+             .statusCode(Matchers.anyOf(Matchers.is(200), Matchers.is(204)));
     }
     
 }
