@@ -12,7 +12,6 @@ import javax.inject.Inject;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-import javax.ws.rs.core.Response;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
@@ -34,34 +33,38 @@ public class TransactionResource {
 	public Map<String, List<String>> newTransaction(@PathParam("accountNumber") Long accountNumber, BigDecimal amount) {
 		return accountService.transact(accountNumber, amount);
 	}
-	
+
 	@POST
 	@Path("/async/{accountNumber}")
-	public CompletionStage<Map<String, List<String>>> newTransactionAsync(@PathParam("accountNumber") Long accountNumber, BigDecimal amount) {
+	public CompletionStage<Map<String, List<String>>> newTransactionAsync(
+			@PathParam("accountNumber") Long accountNumber, BigDecimal amount) {
 		return accountService.transactAsync(accountNumber, amount);
 	}
 
 	@POST
 	@Path("/api/{accountNumber}")
-	public Response newTransactionWithApi(@PathParam("accountNumber") Long accountNumber, BigDecimal amount)
-			throws IllegalStateException, RestClientDefinitionException, MalformedURLException {
+	public Map<String, List<String>> newTransactionWithApi(@PathParam("accountNumber") Long accountNumber,
+			BigDecimal amount) throws IllegalStateException, RestClientDefinitionException, MalformedURLException {
 		AccountServiceProgrammatic accountServiceProgrammatic = RestClientBuilder.newBuilder()
-				.baseUrl(new URL(accountServiceUrl)).connectTimeout(500, TimeUnit.MILLISECONDS)
-				.readTimeout(1500, TimeUnit.MILLISECONDS).build(AccountServiceProgrammatic.class);
-		accountServiceProgrammatic.transact(accountNumber, amount);
-		return Response.ok().build();
+				.baseUrl(new URL(accountServiceUrl))
+				.connectTimeout(500, TimeUnit.MILLISECONDS)
+				.readTimeout(1500, TimeUnit.MILLISECONDS)
+				.register(AccountRequestFilter.class)
+				.build(AccountServiceProgrammatic.class);
+		return accountServiceProgrammatic.transact(accountNumber, amount);
 	}
-	
-
 
 	@POST
 	@Path("/api/async/{accountNumber}")
-	public CompletionStage<Void> newTransactionWithApiAsync(@PathParam("accountNumber") Long accountNumber, BigDecimal amount)
+	public CompletionStage<Map<String, List<String>>> newTransactionWithApiAsync(
+			@PathParam("accountNumber") Long accountNumber, BigDecimal amount)
 			throws IllegalStateException, RestClientDefinitionException, MalformedURLException {
 		AccountServiceProgrammatic accountServiceProgrammatic = RestClientBuilder.newBuilder()
 				.baseUrl(new URL(accountServiceUrl)).connectTimeout(500, TimeUnit.MILLISECONDS)
-				.readTimeout(1500, TimeUnit.MILLISECONDS).build(AccountServiceProgrammatic.class);
+				.readTimeout(1500, TimeUnit.MILLISECONDS)
+				.register(AccountRequestFilter.class)
+				.build(AccountServiceProgrammatic.class);
 		return accountServiceProgrammatic.transactAsync(accountNumber, amount);
-		
+
 	}
 }
