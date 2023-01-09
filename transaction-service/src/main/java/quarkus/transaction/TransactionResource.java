@@ -3,6 +3,8 @@ package quarkus.transaction;
 import java.math.BigDecimal;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletionStage;
@@ -31,7 +33,13 @@ public class TransactionResource {
 	@POST
 	@Path("/{accountNumber}")
 	public Map<String, List<String>> newTransaction(@PathParam("accountNumber") Long accountNumber, BigDecimal amount) {
-		return accountService.transact(accountNumber, amount);
+		try {
+			return accountService.transact(accountNumber, amount);
+		} catch (Exception e) {
+			Map<String, List<String>> response = new HashMap<>();
+			response.put("Exception - " + e.getClass(), Collections.singletonList(e.getMessage()));
+			return response;
+		}
 	}
 
 	@POST
@@ -46,10 +54,8 @@ public class TransactionResource {
 	public Map<String, List<String>> newTransactionWithApi(@PathParam("accountNumber") Long accountNumber,
 			BigDecimal amount) throws IllegalStateException, RestClientDefinitionException, MalformedURLException {
 		AccountServiceProgrammatic accountServiceProgrammatic = RestClientBuilder.newBuilder()
-				.baseUrl(new URL(accountServiceUrl))
-				.connectTimeout(500, TimeUnit.MILLISECONDS)
-				.readTimeout(1500, TimeUnit.MILLISECONDS)
-				.register(AccountRequestFilter.class)
+				.baseUrl(new URL(accountServiceUrl)).connectTimeout(500, TimeUnit.MILLISECONDS)
+				.readTimeout(1500, TimeUnit.MILLISECONDS).register(AccountRequestFilter.class)
 				.build(AccountServiceProgrammatic.class);
 		return accountServiceProgrammatic.transact(accountNumber, amount);
 	}
@@ -61,8 +67,7 @@ public class TransactionResource {
 			throws IllegalStateException, RestClientDefinitionException, MalformedURLException {
 		AccountServiceProgrammatic accountServiceProgrammatic = RestClientBuilder.newBuilder()
 				.baseUrl(new URL(accountServiceUrl)).connectTimeout(500, TimeUnit.MILLISECONDS)
-				.readTimeout(1500, TimeUnit.MILLISECONDS)
-				.register(AccountRequestFilter.class)
+				.readTimeout(1500, TimeUnit.MILLISECONDS).register(AccountRequestFilter.class)
 				.build(AccountServiceProgrammatic.class);
 		return accountServiceProgrammatic.transactAsync(accountNumber, amount);
 
