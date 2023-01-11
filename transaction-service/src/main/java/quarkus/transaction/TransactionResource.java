@@ -11,6 +11,7 @@ import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -20,24 +21,39 @@ import org.eclipse.microprofile.rest.client.RestClientBuilder;
 import org.eclipse.microprofile.rest.client.RestClientDefinitionException;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 
+import quarkus.transaction.object.Transaction;
+import quarkus.transaction.object.TransactionStatus;
+import quarkus.transaction.repository.TransactionRepository;
+
 @Path("/transactions")
 public class TransactionResource {
 
 	@ConfigProperty(name = "account.service", defaultValue = "http://localhost:8080")
-	private String accountServiceUrl;
+	String accountServiceUrl;
 
 	@Inject
 	@RestClient
 	AccountService accountService;
 
+	@Inject
+	TransactionRepository transactionRepository;
+
 	@POST
 	@Path("/{accountNumber}")
+	@Transactional
 	public Map<String, List<String>> newTransaction(@PathParam("accountNumber") Long accountNumber, BigDecimal amount) {
+		Transaction transaction = new Transaction();
+		transaction.setAccountNumber(accountNumber);
+		transaction.setAmount(amount);
+		transactionRepository.persist(transaction);
 		try {
-			return accountService.transact(accountNumber, amount);
+			Map<String, List<String>> transactionResponse = accountService.transact(accountNumber, amount);
+			transaction.setStatus(TransactionStatus.SUCCESS);
+			return transactionResponse;
 		} catch (Exception e) {
 			Map<String, List<String>> response = new HashMap<>();
 			response.put("Exception - " + e.getClass(), Collections.singletonList(e.getMessage()));
+			transaction.setStatus(TransactionStatus.ERROR);
 			return response;
 		}
 	}
