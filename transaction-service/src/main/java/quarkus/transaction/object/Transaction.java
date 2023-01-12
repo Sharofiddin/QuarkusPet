@@ -73,4 +73,14 @@ public class Transaction {
 	public void setUpdated(LocalDateTime updated) {
 		this.updated = updated;
 	}
+
+	public void makeSucces() {
+		setStatus(TransactionStatus.SUCCESS);
+		setUpdated(LocalDateTime.now());
+	}
+
+	public void makeError() {
+		setStatus(TransactionStatus.ERROR);
+		setUpdated(LocalDateTime.now());
+	}
 }

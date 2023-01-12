@@ -14,6 +14,8 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 
 import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
 
@@ -23,8 +25,10 @@ public class WiremockAccountService implements QuarkusTestResourceLifecycleManag
 
 	@Override
 	public Map<String, String> start() {
-		wireMockServer = new WireMockServer();
+		wireMockServer = new WireMockServer(WireMockConfiguration.options().port(7080));
 		wireMockServer.start();
+		WireMock.configureFor(wireMockServer.port());
+		
 
 		stubFor(get(urlEqualTo("/accounts/121212/balance")).willReturn(
 				aResponse().withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON).withBody("100.20")));
