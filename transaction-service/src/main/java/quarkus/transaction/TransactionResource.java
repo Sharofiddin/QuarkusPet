@@ -19,11 +19,14 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.faulttolerance.Bulkhead;
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
 import org.eclipse.microprofile.rest.client.RestClientDefinitionException;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 
+import quarkus.transaction.exception.AccountExceptionMapper;
 import quarkus.transaction.object.Transaction;
+import quarkus.transaction.object.TransactionStatus;
 import quarkus.transaction.repository.TransactionRepository;
 
 @Path("/transactions")
@@ -38,13 +41,13 @@ public class TransactionResource {
 
 	@Inject
 	TransactionRepository transactionRepository;
-	
+
 	@GET
 	@Path("/")
-	public List<Transaction> getAllTransactions(){
+	public List<Transaction> getAllTransactions() {
 		return transactionRepository.listAll();
 	}
-		
+
 	@POST
 	@Path("/{accountNumber}")
 	@Transactional
@@ -55,7 +58,7 @@ public class TransactionResource {
 			transaction.makeSucces();
 			return transactionResponse;
 		} catch (Exception e) {
-			return makeTrxError(transaction, e);
+			return makeError(e);
 		}
 	}
 
@@ -64,34 +67,33 @@ public class TransactionResource {
 	@Transactional
 	public CompletionStage<Map<String, List<String>>> newTransactionAsync(
 			@PathParam("accountNumber") Long accountNumber, BigDecimal amount) {
-
-		Transaction transaction = createNewTransaction(accountNumber, amount);
 		try {
+			Transaction transaction = createNewTransaction(accountNumber, amount);
 			CompletionStage<Map<String, List<String>>> response = accountService.transactAsync(accountNumber, amount);
 			transaction.makeSucces();
 			return response;
 		} catch (Exception e) {
-			return CompletableFuture.supplyAsync(() -> makeTrxError(transaction, e));
-
+			return CompletableFuture.supplyAsync(() -> makeError(e));
 		}
 	}
 
 	@POST
 	@Path("/api/{accountNumber}")
 	@Transactional
+	@Bulkhead(1)
 	public Map<String, List<String>> newTransactionWithApi(@PathParam("accountNumber") Long accountNumber,
 			BigDecimal amount) throws IllegalStateException, RestClientDefinitionException, MalformedURLException {
-		Transaction transaction = createNewTransaction(accountNumber, amount);
 		try {
+			Transaction transaction = createNewTransaction(accountNumber, amount);
 			AccountServiceProgrammatic accountServiceProgrammatic = RestClientBuilder.newBuilder()
 					.baseUrl(new URL(accountServiceUrl)).connectTimeout(500, TimeUnit.MILLISECONDS)
-					.readTimeout(1500, TimeUnit.MILLISECONDS).register(AccountRequestFilter.class)
-					.build(AccountServiceProgrammatic.class);
+					.readTimeout(1500, TimeUnit.MILLISECONDS).register(AccountExceptionMapper.class)
+					.register(AccountRequestFilter.class).build(AccountServiceProgrammatic.class);
 			Map<String, List<String>> reponse = accountServiceProgrammatic.transact(accountNumber, amount);
 			transaction.makeSucces();
 			return reponse;
 		} catch (Exception e) {
-			return makeTrxError(transaction, e);
+			return makeError(e);
 		}
 	}
 
@@ -101,20 +103,16 @@ public class TransactionResource {
 	public CompletionStage<Map<String, List<String>>> newTransactionWithApiAsync(
 			@PathParam("accountNumber") Long accountNumber, BigDecimal amount)
 			throws IllegalStateException, RestClientDefinitionException, MalformedURLException {
-		Transaction transaction = createNewTransaction(accountNumber, amount);
-		try {
+			Transaction transaction = createNewTransaction(accountNumber, amount);
+			transaction.setStatus(TransactionStatus.SUCCESS);
 			AccountServiceProgrammatic accountServiceProgrammatic = RestClientBuilder.newBuilder()
 					.baseUrl(new URL(accountServiceUrl)).connectTimeout(500, TimeUnit.MILLISECONDS)
 					.readTimeout(1500, TimeUnit.MILLISECONDS).register(AccountRequestFilter.class)
 					.build(AccountServiceProgrammatic.class);
-			CompletionStage<Map<String, List<String>>> response = accountServiceProgrammatic
-					.transactAsync(accountNumber, amount);
-			transaction.makeSucces();
-			return response;
-		} catch (Exception e) {
-			return CompletableFuture.supplyAsync(() -> makeTrxError(transaction, e));
-		}
-
+			return  accountServiceProgrammatic
+					.transactAsyncWithApi(accountNumber, amount)
+					.exceptionally(this::makeError);
+		
 	}
 
 	private Transaction createNewTransaction(Long accountNumber, BigDecimal amount) {
@@ -125,10 +123,9 @@ public class TransactionResource {
 		return transaction;
 	}
 
-	private Map<String, List<String>> makeTrxError(Transaction transaction, Exception e) {
+	private Map<String, List<String>> makeError(Throwable e) {
 		Map<String, List<String>> response = new HashMap<>();
 		response.put("Exception - " + e.getClass(), Collections.singletonList(e.getMessage()));
-		transaction.makeError();
 		return response;
 	}
 

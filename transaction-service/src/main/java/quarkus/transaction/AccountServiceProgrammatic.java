@@ -26,7 +26,7 @@ public interface AccountServiceProgrammatic {
 	@POST
 	@Path("/{accountNumber}/transaction")
 	@ClientHeaderParam(name = "Method-Level-Header", value = "{generateValue}")
-	CompletionStage<Map<String, List<String>>> transactAsync(@PathParam("accountNumber") Long accountNumber, BigDecimal amount);
+	CompletionStage<Map<String, List<String>>> transactAsyncWithApi(@PathParam("accountNumber") Long accountNumber, BigDecimal amount);
 	
 	default String generateValue() {
 		return "Method level header value async (api)";
