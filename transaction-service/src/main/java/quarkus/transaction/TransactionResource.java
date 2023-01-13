@@ -24,7 +24,6 @@ import org.eclipse.microprofile.rest.client.RestClientDefinitionException;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 
 import quarkus.transaction.object.Transaction;
-import quarkus.transaction.object.TransactionStatus;
 import quarkus.transaction.repository.TransactionRepository;
 
 @Path("/transactions")

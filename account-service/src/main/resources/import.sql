@@ -15,3 +15,6 @@ VALUES(5, 101010101, 0, 850.69, 'Norbert Thijmen', 778877);
 
 INSERT INTO account(id, account_number, account_status, balance, customer_name, customer_number)
 VALUES(6, 987654789, 0, 890.33, 'Yusef Rubab', 222444);
+
+INSERT INTO account(id, account_number, account_status, balance, customer_name, customer_number)
+VALUES (7, 999999999, 0, 999999999.01, 'Readiness healthcheck', 999999999);

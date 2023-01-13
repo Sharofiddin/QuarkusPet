@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletionStage;
 
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -32,7 +33,11 @@ public interface AccountService {
 	@Path("/{accountNumber}/transaction")
 	Map<String, List<String>> transact(@PathParam("accountNumber") Long accountNumber, BigDecimal amount)
 			throws AccountNotFoundException;
-
+	
+	@GET
+	@Path("/{accountNumber}/balance")
+	BigDecimal getBalance(@PathParam("accountNumber") Long accountNumber);
+	
 	@POST
 	@Path("/{accountNumber}/transaction")
 	@ClientHeaderParam(name = "method-lvl-param", value = "{generated}")
