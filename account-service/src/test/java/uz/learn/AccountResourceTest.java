@@ -33,7 +33,7 @@ import uz.learn.objects.AccountStatus;
 @TestMethodOrder(OrderAnnotation.class)
 class AccountResourceTest {
 
-	private static final int SIZE = 6;
+	private static final int SIZE = 7;
 
 	@DisplayName("Retrieve all accounts")
 	@Test

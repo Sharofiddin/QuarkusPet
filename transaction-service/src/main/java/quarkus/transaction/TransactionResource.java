@@ -3,11 +3,11 @@ package quarkus.transaction;
 import java.math.BigDecimal;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeUnit;
 
@@ -17,9 +17,13 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.faulttolerance.Bulkhead;
+import org.eclipse.microprofile.faulttolerance.Fallback;
+import org.eclipse.microprofile.faulttolerance.exceptions.BulkheadException;
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
 import org.eclipse.microprofile.rest.client.RestClientDefinitionException;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -58,7 +62,7 @@ public class TransactionResource {
 			transaction.makeSucces();
 			return transactionResponse;
 		} catch (Exception e) {
-			return makeError(e);
+			return makeError(e, transaction);
 		}
 	}
 
@@ -67,24 +71,23 @@ public class TransactionResource {
 	@Transactional
 	public CompletionStage<Map<String, List<String>>> newTransactionAsync(
 			@PathParam("accountNumber") Long accountNumber, BigDecimal amount) {
-		try {
-			Transaction transaction = createNewTransaction(accountNumber, amount);
-			CompletionStage<Map<String, List<String>>> response = accountService.transactAsync(accountNumber, amount);
+		Transaction transaction = createNewTransaction(accountNumber, amount);
+			CompletionStage<Map<String, List<String>>> response = accountService
+					.transactAsync(accountNumber, amount)
+					.exceptionallyAsync(e->makeError(e, transaction));
 			transaction.makeSucces();
 			return response;
-		} catch (Exception e) {
-			return CompletableFuture.supplyAsync(() -> makeError(e));
-		}
 	}
 
 	@POST
 	@Path("/api/{accountNumber}")
 	@Transactional
 	@Bulkhead(1)
+	@Fallback(applyOn = BulkheadException.class, fallbackMethod = "bulkheadNewTrxWithApi")
 	public Map<String, List<String>> newTransactionWithApi(@PathParam("accountNumber") Long accountNumber,
 			BigDecimal amount) throws IllegalStateException, RestClientDefinitionException, MalformedURLException {
+		Transaction transaction = createNewTransaction(accountNumber, amount);
 		try {
-			Transaction transaction = createNewTransaction(accountNumber, amount);
 			AccountServiceProgrammatic accountServiceProgrammatic = RestClientBuilder.newBuilder()
 					.baseUrl(new URL(accountServiceUrl)).connectTimeout(500, TimeUnit.MILLISECONDS)
 					.readTimeout(1500, TimeUnit.MILLISECONDS).register(AccountExceptionMapper.class)
@@ -93,7 +96,7 @@ public class TransactionResource {
 			transaction.makeSucces();
 			return reponse;
 		} catch (Exception e) {
-			return makeError(e);
+			return makeError(e, transaction);
 		}
 	}
 
@@ -111,7 +114,7 @@ public class TransactionResource {
 					.build(AccountServiceProgrammatic.class);
 			return  accountServiceProgrammatic
 					.transactAsyncWithApi(accountNumber, amount)
-					.exceptionally(this::makeError);
+					.exceptionally(e->makeError(e, transaction));
 		
 	}
 
@@ -123,10 +126,16 @@ public class TransactionResource {
 		return transaction;
 	}
 
-	private Map<String, List<String>> makeError(Throwable e) {
+	private Map<String, List<String>> makeError(Throwable e, Transaction transaction) {
+		transaction.setStatus(TransactionStatus.ERROR);
+		transaction.setUpdated(LocalDateTime.now());
 		Map<String, List<String>> response = new HashMap<>();
 		response.put("Exception - " + e.getClass(), Collections.singletonList(e.getMessage()));
 		return response;
+	}
+	
+	public  Map<String, List<String>> bulkheadNewTrxWithApi(Long accountNumber, BigDecimal amount) {
+		return Map.of("Error", List.of("TOO_MANY_REQUESTS"));
 	}
 
 }
