@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletionStage;
 
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -31,4 +32,8 @@ public interface AccountServiceProgrammatic {
 	default String generateValue() {
 		return "Method level header value async (api)";
 	}
+	
+	@GET
+	@Path("/{accountNumber}/balance")
+	BigDecimal getBalanceApi(@PathParam("accountNumber") Long accountNumber);
 }

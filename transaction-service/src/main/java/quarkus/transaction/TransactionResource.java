@@ -17,12 +17,15 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.faulttolerance.Bulkhead;
 import org.eclipse.microprofile.faulttolerance.Fallback;
+import org.eclipse.microprofile.faulttolerance.Timeout;
 import org.eclipse.microprofile.faulttolerance.exceptions.BulkheadException;
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
 import org.eclipse.microprofile.rest.client.RestClientDefinitionException;
@@ -65,7 +68,8 @@ public class TransactionResource {
 			return makeError(e, transaction);
 		}
 	}
-
+	
+	
 	@POST
 	@Path("/async/{accountNumber}")
 	@Transactional
@@ -117,7 +121,16 @@ public class TransactionResource {
 					.exceptionally(e->makeError(e, transaction));
 		
 	}
-
+	
+	@GET
+	@Path("/{accountNumber}/balance")
+	@Timeout(100)
+	@Fallback(fallbackMethod = "timeoutFallbackGetBalance")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getBalance(@PathParam("accountNumber") Long accountNumber) {
+		return Response.ok(accountService.getBalance(accountNumber)).build();
+	}
+	
 	private Transaction createNewTransaction(Long accountNumber, BigDecimal amount) {
 		Transaction transaction = new Transaction();
 		transaction.setAccountNumber(accountNumber);
@@ -136,6 +149,10 @@ public class TransactionResource {
 	
 	public  Map<String, List<String>> bulkheadNewTrxWithApi(Long accountNumber, BigDecimal amount) {
 		return Map.of("Error", List.of("TOO_MANY_REQUESTS"));
+	}
+	
+	public Response timeoutFallbackGetBalance(Long accountNumber) {
+		return Response.status(Status.GATEWAY_TIMEOUT).build();
 	}
 
 }
