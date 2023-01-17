@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -24,14 +25,18 @@ import javax.ws.rs.core.Response.Status;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.faulttolerance.Bulkhead;
+import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.eclipse.microprofile.faulttolerance.Fallback;
+import org.eclipse.microprofile.faulttolerance.Retry;
 import org.eclipse.microprofile.faulttolerance.Timeout;
 import org.eclipse.microprofile.faulttolerance.exceptions.BulkheadException;
+import org.eclipse.microprofile.faulttolerance.exceptions.TimeoutException;
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
 import org.eclipse.microprofile.rest.client.RestClientDefinitionException;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 
 import quarkus.transaction.exception.AccountExceptionMapper;
+import quarkus.transaction.exception.TransactionServiceFallbackHandler;
 import quarkus.transaction.object.Transaction;
 import quarkus.transaction.object.TransactionStatus;
 import quarkus.transaction.repository.TransactionRepository;
@@ -87,21 +92,24 @@ public class TransactionResource {
 	@Path("/api/{accountNumber}")
 	@Transactional
 	@Bulkhead(1)
-	@Fallback(applyOn = BulkheadException.class, fallbackMethod = "bulkheadNewTrxWithApi")
-	public Map<String, List<String>> newTransactionWithApi(@PathParam("accountNumber") Long accountNumber,
+	@CircuitBreaker(
+			requestVolumeThreshold = 3,
+			failureRatio = 0.66,
+			delay = 5,
+			delayUnit = ChronoUnit.SECONDS,
+			successThreshold = 2
+			)
+	@Fallback(applyOn = BulkheadException.class, value =  TransactionServiceFallbackHandler.class)
+	public Response newTransactionWithApi(@PathParam("accountNumber") Long accountNumber,
 			BigDecimal amount) throws IllegalStateException, RestClientDefinitionException, MalformedURLException {
 		Transaction transaction = createNewTransaction(accountNumber, amount);
-		try {
 			AccountServiceProgrammatic accountServiceProgrammatic = RestClientBuilder.newBuilder()
 					.baseUrl(new URL(accountServiceUrl)).connectTimeout(500, TimeUnit.MILLISECONDS)
 					.readTimeout(1500, TimeUnit.MILLISECONDS).register(AccountExceptionMapper.class)
 					.register(AccountRequestFilter.class).build(AccountServiceProgrammatic.class);
 			Map<String, List<String>> reponse = accountServiceProgrammatic.transact(accountNumber, amount);
 			transaction.makeSucces();
-			return reponse;
-		} catch (Exception e) {
-			return makeError(e, transaction);
-		}
+			return Response.ok(reponse).build();
 	}
 
 	@POST
@@ -125,7 +133,11 @@ public class TransactionResource {
 	@GET
 	@Path("/{accountNumber}/balance")
 	@Timeout(100)
-	@Fallback(fallbackMethod = "timeoutFallbackGetBalance")
+	@Fallback(value = TransactionServiceFallbackHandler.class)
+	@Retry(retryOn = TimeoutException.class, 
+	delay = 100,
+	maxRetries = 3,
+	jitter = 25)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getBalance(@PathParam("accountNumber") Long accountNumber) {
 		return Response.ok(accountService.getBalance(accountNumber)).build();
