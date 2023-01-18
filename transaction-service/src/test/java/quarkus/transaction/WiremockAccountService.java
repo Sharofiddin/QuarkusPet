@@ -6,10 +6,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 
-import java.util.List;
 import java.util.Map;
 
-import javax.json.Json;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 
@@ -25,23 +23,22 @@ public class WiremockAccountService implements QuarkusTestResourceLifecycleManag
 
 	private WireMockServer wireMockServer;
 
-	private static final String SERVER_ERROR_1 = "CB Fail 1";
-	private static final String SERVER_ERROR_2 = "CB Fail 2";
-	private static final String CB_OPEN_1 = "CB Open 1";
-	private static final String CB_OPEN_2 = "CB Open 2";
-	private static final String CB_OPEN_3 = "CB Open 3";
-	private static final String CB_SUCCES_1 = "CB Succes 1";
-	private static final String CB_SUCCES_2 = "CB Succes 2";
+	private static final String SERVER_ERROR_1 = "SERVER_ERROR_1";
+	private static final String SERVER_ERROR_2 = "SERVER_ERROR_2";
+	private static final String CB_OPEN_1 = "CB_OPEN_1";
+	private static final String CB_OPEN_2 = "CB_OPEN_2";
+	private static final String CB_OPEN_3 = "CB_OPEN_3";
+	private static final String CB_SUCCESS_1 = "CB_SUCCESS_1";
+	private static final String CB_SUCCESS_2 = "CB_SUCCESS_2";
 
 	@Override
 	public Map<String, String> start() {
 		wireMockServer = new WireMockServer(WireMockConfiguration.options().port(7080));
 		wireMockServer.start();
 		WireMock.configureFor(wireMockServer.port());
-
+		mockCircuitBreaker();
 		mockAccountService();
 		mockTimeout();
-		mockCircuitBreaker();
 		return Map.of("account-service/mp-rest/url", wireMockServer.baseUrl(), "account.service",
 				wireMockServer.baseUrl());
 	}
@@ -62,20 +59,20 @@ public class WiremockAccountService implements QuarkusTestResourceLifecycleManag
 	}
 
 	protected void mockCircuitBreaker() {
-		createCircuitBreakerStub(Scenario.STARTED, SERVER_ERROR_1, "100", 200);
-		createCircuitBreakerStub(SERVER_ERROR_1, SERVER_ERROR_2, "200", 502);
-		createCircuitBreakerStub(SERVER_ERROR_2, CB_OPEN_1, "300", 502);
-		createCircuitBreakerStub(CB_OPEN_1, CB_OPEN_2, "400", 200);
-		createCircuitBreakerStub(CB_OPEN_2, CB_OPEN_3, "500", 200);
-		createCircuitBreakerStub(CB_OPEN_3, CB_SUCCES_1, "600", 200);
-		createCircuitBreakerStub(CB_SUCCES_1, CB_SUCCES_2, "700", 200);
+		createCircuitbreakerStub(Scenario.STARTED, SERVER_ERROR_1, "100.00", 200);
+		createCircuitbreakerStub(SERVER_ERROR_1, SERVER_ERROR_2, "200.00", 502);
+		createCircuitbreakerStub(SERVER_ERROR_2, CB_OPEN_1, "300.00", 502);
+		createCircuitbreakerStub(CB_OPEN_1, CB_OPEN_2, "400.00", 200);
+		createCircuitbreakerStub(CB_OPEN_2, CB_OPEN_3, "500.00", 200);
+		createCircuitbreakerStub(CB_OPEN_3, CB_SUCCESS_1, "600.00", 200);
+		createCircuitbreakerStub(CB_SUCCESS_1, CB_SUCCESS_2, "700.00", 200);
+
 	}
 
-	void createCircuitBreakerStub(String currentState, String nextState, String response, int status) {
-		stubFor(post(urlEqualTo("/accounts/444666/transaction")).inScenario("circuitbreake")
-				.whenScenarioStateIs(currentState).willSetStateTo(nextState)
-				.willReturn(aResponse().withHeader("Content-Type", MediaType.APPLICATION_JSON).withStatus(status)
-						.withBody(Json.createObjectBuilder(Map.of("amount", List.of(response))).build().toString())));
+	void createCircuitbreakerStub(String currentState, String nextState, String response, int status) {
+		stubFor(post(urlEqualTo("/accounts/444666/transaction")).inScenario("circuitbreaker")
+				.whenScenarioStateIs(currentState).willSetStateTo(nextState).willReturn(aResponse()
+						.withHeader("Content-Type", MediaType.TEXT_PLAIN).withBody(response).withStatus(status)));
 	}
 
 	@Override

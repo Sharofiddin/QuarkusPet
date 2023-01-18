@@ -1,15 +1,15 @@
 package quarkus.transaction;
 
+import static io.restassured.RestAssured.given;
+
+import javax.ws.rs.core.MediaType;
+
 import org.junit.jupiter.api.Test;
 
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
-
-import static io.restassured.RestAssured.given;
-
-import javax.ws.rs.core.MediaType;
 @QuarkusTest
 @QuarkusTestResource(WiremockAccountService.class)
 class FaultyAccountServiceTest {
@@ -27,31 +27,23 @@ class FaultyAccountServiceTest {
 	
 	@Test
 	void testCircuitBreaker() {
-		RequestSpecification request = given().body("143.00").contentType(ContentType.JSON);
+		RequestSpecification request = given().body("145.00").contentType(ContentType.JSON);
 		request.post("/transactions/api/444666").then().statusCode(200);
-		
-		//Server error threshold
 		request.post("/transactions/api/444666").then().statusCode(502);
 		request.post("/transactions/api/444666").then().statusCode(502);
 		
-		//circuit breaker
+		//circuit breaker opened
 		request.post("/transactions/api/444666").then().statusCode(503);
 		request.post("/transactions/api/444666").then().statusCode(503);
-		request.post("/transactions/api/444666").then().statusCode(503);
-		
 		
 		try {
-			Thread.sleep(1000L);
+			Thread.sleep(5000L);
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
 		request.post("/transactions/api/444666").then().statusCode(200);
 		request.post("/transactions/api/444666").then().statusCode(200);
-		
-		
+		request.post("/transactions/api/444666").then().statusCode(200);
 	}
-	
-
 }

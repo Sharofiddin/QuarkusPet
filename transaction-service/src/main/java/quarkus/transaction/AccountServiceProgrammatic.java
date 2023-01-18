@@ -22,7 +22,7 @@ public interface AccountServiceProgrammatic {
 
 	@POST
 	@Path("/{accountNumber}/transaction")
-	Map<String, List<String>> transact(@PathParam("accountNumber") Long accountNumber, BigDecimal amount);
+	String transact(@PathParam("accountNumber") Long accountNumber, BigDecimal amount);
 
 	@POST
 	@Path("/{accountNumber}/transaction")

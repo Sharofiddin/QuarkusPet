@@ -27,10 +27,11 @@ public class TransactionServiceFallbackHandler implements FallbackHandler<Respon
 		case "TimeoutException":
 			response = Response.status(Status.GATEWAY_TIMEOUT).build();
 			break;
-		case "CircuitBreakerException":
+		case "CircuitBreakerOpenException":
 			response = Response.status(Status.SERVICE_UNAVAILABLE).build();
 			break;
-		case "WebApplicationException", 
+		case "ResteasyWebApplicationException",
+		     "WebApplicationException", 
 		     "HttpHostConnectException":
 			response = Response.status(Status.BAD_GATEWAY).build();
 			break;
