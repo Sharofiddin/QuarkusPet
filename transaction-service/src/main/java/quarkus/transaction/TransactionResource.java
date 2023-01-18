@@ -29,7 +29,6 @@ import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.eclipse.microprofile.faulttolerance.Fallback;
 import org.eclipse.microprofile.faulttolerance.Retry;
 import org.eclipse.microprofile.faulttolerance.Timeout;
-import org.eclipse.microprofile.faulttolerance.exceptions.BulkheadException;
 import org.eclipse.microprofile.faulttolerance.exceptions.TimeoutException;
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
 import org.eclipse.microprofile.rest.client.RestClientDefinitionException;
@@ -99,7 +98,7 @@ public class TransactionResource {
 			delayUnit = ChronoUnit.SECONDS,
 			successThreshold = 2
 			)
-	@Fallback(applyOn = BulkheadException.class, value =  TransactionServiceFallbackHandler.class)
+	@Fallback(value =  TransactionServiceFallbackHandler.class)
 	public Response newTransactionWithApi(@PathParam("accountNumber") Long accountNumber,
 			BigDecimal amount) throws IllegalStateException, RestClientDefinitionException, MalformedURLException {
 		Transaction transaction = createNewTransaction(accountNumber, amount);
@@ -107,7 +106,7 @@ public class TransactionResource {
 					.baseUrl(new URL(accountServiceUrl)).connectTimeout(500, TimeUnit.MILLISECONDS)
 					.readTimeout(1500, TimeUnit.MILLISECONDS).register(AccountExceptionMapper.class)
 					.register(AccountRequestFilter.class).build(AccountServiceProgrammatic.class);
-			Map<String, List<String>> reponse = accountServiceProgrammatic.transact(accountNumber, amount);
+			String reponse =  accountServiceProgrammatic.transact(accountNumber, amount);
 			transaction.makeSucces();
 			return Response.ok(reponse).build();
 	}
