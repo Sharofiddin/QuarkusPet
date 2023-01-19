@@ -28,7 +28,9 @@ import javax.ws.rs.ext.Provider;
 
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
+import org.eclipse.microprofile.reactive.messaging.Incoming;
 
+import io.smallrye.reactive.messaging.annotations.Blocking;
 import uz.learn.objects.Account;
 import uz.learn.objects.AccountStatus;
 import uz.learn.objects.OverdraftLimitUpdate;
@@ -143,8 +145,12 @@ public class AccountResource {
 		return Response.noContent().build();
 	}
 	
+	@Incoming("overdraft-update")
+	@Transactional
+	@Blocking
 	public void processOverdraftUpdate(OverdraftLimitUpdate overdraftLimitUpdate) {
 		Account entity = accountRepository.findByAccountNumber(overdraftLimitUpdate.getAccountNumber());
+		entity.setOverdraftLimit(overdraftLimitUpdate.getNewOverDraftLimit());
 	}
 	@Provider
 	public static class ErrorMapper implements ExceptionMapper<Exception> {
