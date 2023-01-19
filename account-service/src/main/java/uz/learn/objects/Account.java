@@ -29,6 +29,9 @@ public class Account {
 	
 	private BigDecimal balance;
 	
+	@Column(name = "overdraft_limit")
+	private BigDecimal overdraftLimit;
+	
 	@Column(name = "account_status")
 	private AccountStatus accountStatus = AccountStatus.OPEN;
 
@@ -102,6 +105,15 @@ public class Account {
 		return accountStatus;
 	}	
 	
+	
+	public BigDecimal getOverdraftLimit() {
+		return overdraftLimit;
+	}
+
+	public void setOverdraftLimit(BigDecimal overdraftLimit) {
+		this.overdraftLimit = overdraftLimit;
+	}
+
 	@Override
 	public boolean equals(Object obj) {
 		if(obj == null) return false;

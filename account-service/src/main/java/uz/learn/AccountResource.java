@@ -3,6 +3,7 @@ package uz.learn;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 import javax.inject.Inject;
 import javax.json.Json;
@@ -25,8 +26,13 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
+import org.eclipse.microprofile.reactive.messaging.Channel;
+import org.eclipse.microprofile.reactive.messaging.Emitter;
+
 import uz.learn.objects.Account;
 import uz.learn.objects.AccountStatus;
+import uz.learn.objects.OverdraftLimitUpdate;
+import uz.learn.objects.Overdrawn;
 import uz.learn.repository.AccountRepository;
 
 @Path("/accounts")
@@ -35,42 +41,47 @@ public class AccountResource {
 	@Inject
 	AccountRepository accountRepository;
 
+	@Inject
+	@Channel("account-overdrawn")
+	Emitter<Overdrawn> emitter;
+
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	public List<Account> allAccounts() {
 		return accountRepository.listAll();
 	}
 
-	 @GET
-	  @Path("/{acctNumber}/balance")
-	  public BigDecimal getBalance(@PathParam("acctNumber") Long accountNumber) {
-	    Account account = accountRepository.findByAccountNumber(accountNumber);
+	@GET
+	@Path("/{acctNumber}/balance")
+	public BigDecimal getBalance(@PathParam("acctNumber") Long accountNumber) {
+		Account account = accountRepository.findByAccountNumber(accountNumber);
 
-	    if (account == null) {
-	      throw new WebApplicationException("Account with " + accountNumber + " does not exist.", 404);
-	    }
+		if (account == null) {
+			throw new WebApplicationException("Account with " + accountNumber + " does not exist.", 404);
+		}
 
-	    return account.getBalance();
-	  }
+		return account.getBalance();
+	}
 
-	  @POST
-	  @Path("{accountNumber}/transaction")
-	  @Transactional
-	  public Map<String, List<String>> transact(@Context HttpHeaders headers, @PathParam("accountNumber") Long accountNumber, BigDecimal amount) {
-	    Account entity = accountRepository.findByAccountNumber(accountNumber);
+	@POST
+	@Path("{accountNumber}/transaction")
+	@Transactional
+	public Map<String, List<String>> transact(@Context HttpHeaders headers,
+			@PathParam("accountNumber") Long accountNumber, BigDecimal amount) {
+		Account entity = accountRepository.findByAccountNumber(accountNumber);
 
-	    if (entity == null) {
-	      throw new WebApplicationException("Account with " + accountNumber + " does not exist.", 404);
-	    }
+		if (entity == null) {
+			throw new WebApplicationException("Account with " + accountNumber + " does not exist.", 404);
+		}
 
-	    if (entity.getAccountStatus().equals(AccountStatus.OVERDRAWN)) {
-	      throw new WebApplicationException("Account is overdrawn, no further withdrawals permitted", 409);
-	    }
+		if (entity.getAccountStatus().equals(AccountStatus.OVERDRAWN)) {
+			throw new WebApplicationException("Account is overdrawn, no further withdrawals permitted", 409);
+		}
 
-	    entity.setBalance(entity.getBalance().add(amount));
-	    return headers.getRequestHeaders();
-	  }
-	
+		entity.setBalance(entity.getBalance().add(amount));
+		return headers.getRequestHeaders();
+	}
+
 	@GET
 	@Path("/{accountNumber}")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -99,7 +110,19 @@ public class AccountResource {
 	@Transactional
 	public Account withdrawal(@PathParam("accountNumber") Long accountNumber, String amount) {
 		Account entity = getAccount(accountNumber);
+		if (entity.getAccountStatus() == AccountStatus.OVERDRAWN
+				&& entity.getBalance().compareTo(entity.getOverdraftLimit()) <= 0) {
+			throw new WebApplicationException("Account is overdrawn, no further withdrawals permitted", 409);
+		}
 		entity.withdrawFunds(new BigDecimal(amount));
+
+		if (entity.getBalance().compareTo(BigDecimal.ZERO) < 0) {
+			entity.markOverdrawn();
+			Overdrawn payload = new Overdrawn(entity.getAccountNumber(), entity.getCustomerNumber(),
+					entity.getBalance(), entity.getOverdraftLimit());
+			emitter.send(payload)
+			.thenCompose(empty->CompletableFuture.completedFuture(entity)); //?
+		}
 		return entity;
 	}
 
@@ -119,7 +142,10 @@ public class AccountResource {
 		accountRepository.delete(accountRepository.findByAccountNumber(accountNumber));
 		return Response.noContent().build();
 	}
-
+	
+	public void processOverdraftUpdate(OverdraftLimitUpdate overdraftLimitUpdate) {
+		Account entity = accountRepository.findByAccountNumber(overdraftLimitUpdate.getAccountNumber());
+	}
 	@Provider
 	public static class ErrorMapper implements ExceptionMapper<Exception> {
 
