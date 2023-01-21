@@ -80,8 +80,9 @@ public class Account {
 		this.balance = BigDecimal.ZERO;
 	}
 	
-	public void withdrawFunds(BigDecimal amount) {
+	public BigDecimal withdrawFunds(BigDecimal amount) {
 		balance = balance.subtract(amount);
+		return balance;
 	}
 	
 	public void addFunds(BigDecimal amount) {

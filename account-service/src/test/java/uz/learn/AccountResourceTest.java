@@ -32,7 +32,7 @@ import uz.learn.objects.AccountStatus;
 @QuarkusTestResource(value = H2DatabaseTestResource.class)
 @TestMethodOrder(OrderAnnotation.class)
 class AccountResourceTest {
-
+	
 	private static final int SIZE = 7;
 
 	@DisplayName("Retrieve all accounts")
