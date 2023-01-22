@@ -8,7 +8,7 @@ import javax.json.stream.JsonParser;
 import javax.json.stream.JsonParser.Event;
 
 public class OverdraftDeserializer implements JsonbDeserializer<OverdraftLimitUpdate> {
-
+	
 	@Override
 	public OverdraftLimitUpdate deserialize(JsonParser parser, DeserializationContext ctx, Type rtType) {
 		OverdraftLimitUpdate result = new OverdraftLimitUpdate();
