@@ -1,16 +1,19 @@
-package uz.leran;
+package uz.learn;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+
+import javax.enterprise.context.ApplicationScoped;
 
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.reactive.messaging.Message;
 import org.eclipse.microprofile.reactive.messaging.Outgoing;
 
-import uz.leran.events.AccountFee;
-import uz.leran.events.Overdrawn;
-import uz.leran.objects.CustomerOverdraft;
+import uz.learn.events.AccountFee;
+import uz.learn.events.Overdrawn;
+import uz.learn.models.CustomerOverdraft;
 
+@ApplicationScoped
 public class AccountFeeProcessor {
 	@Incoming("customer-overdrafts")
 	@Outgoing("overdraft-fee")

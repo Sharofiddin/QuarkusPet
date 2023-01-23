@@ -1,7 +1,7 @@
-package uz.leran;
+package uz.learn;
 
-import uz.leran.events.Overdrawn;
 import io.quarkus.kafka.client.serialization.JsonbDeserializer;
+import uz.learn.events.Overdrawn;
 
 public class OverdrawnDeserializer extends JsonbDeserializer<Overdrawn> {
 

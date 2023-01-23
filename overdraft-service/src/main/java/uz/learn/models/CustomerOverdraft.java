@@ -1,4 +1,4 @@
-package uz.leran.objects;
+package uz.learn.models;
 
 import java.util.HashMap;
 import java.util.Map;

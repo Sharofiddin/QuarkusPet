@@ -1,4 +1,4 @@
-package uz.leran;
+package uz.learn;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
@@ -17,12 +17,12 @@ import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.reactive.messaging.Message;
 import org.eclipse.microprofile.reactive.messaging.Outgoing;
 
-import uz.leran.events.OverdraftLimitUpdate;
-import uz.leran.events.Overdrawn;
-import uz.leran.objects.AccountOverdraft;
-import uz.leran.objects.CustomerOverdraft;
+import uz.learn.events.OverdraftLimitUpdate;
+import uz.learn.events.Overdrawn;
+import uz.learn.models.AccountOverdraft;
+import uz.learn.models.CustomerOverdraft;
 
-@Path("overdraft")
+@Path("/overdraft")
 public class OverdraftResource {
 
 	private Map<Long, CustomerOverdraft> customerOverdrafts = new HashMap<>();

@@ -1,4 +1,4 @@
-package uz.leran.events;
+package uz.learn.events;
 
 import java.math.BigDecimal;
 

@@ -1,4 +1,4 @@
-package uz.leran;
+package uz.learn;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -11,16 +11,15 @@ public class InmemoryLifecyclemanager implements QuarkusTestResourceLifecycleMan
 	@Override
 	public Map<String, String> start() {
 		Map<String, String> env = new HashMap<>();
-		env.putAll(InMemoryConnector.switchIncomingChannelsToInMemory("account-overdraft"));
-		env.putAll(InMemoryConnector.switchOutgoingChannelsToInMemory("account-fee"));
-		
-		
-		return null;
+		env.putAll(InMemoryConnector.switchIncomingChannelsToInMemory("account-overdrawn"));
+		env.putAll(InMemoryConnector.switchOutgoingChannelsToInMemory("overdraft-update"));
+		env.putAll(InMemoryConnector.switchOutgoingChannelsToInMemory("overdraft-fee"));
+		return env;
 	}
 
 	@Override
 	public void stop() {
-
+		InMemoryConnector.clear();
 	}
 
 }
