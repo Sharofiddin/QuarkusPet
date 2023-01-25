@@ -14,6 +14,7 @@ import static org.hamcrest.text.IsEmptyString.emptyString;
 import java.math.BigDecimal;
 import java.util.List;
 
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.junit.jupiter.api.Order;
@@ -51,12 +52,12 @@ class AccountResourceTest {
 	@Test
 	@Order(2)
 	void testGetAccountById() {
-		Account account = given().when().get("/accounts/{accountNumber}", 777888999L).then().statusCode(200).extract()
+		Account account = given().when().get("/accounts/{accountNumber}", 444555666L).then().statusCode(200).extract()
 				.as(Account.class);
 
-		assertThat(account.getAccountNumber(), equalTo(777888999L));
-		assertThat(account.getCustomerName(), equalTo("Gallus Zakaria"));
-		assertThat(account.getBalance(), equalTo(BigDecimal.valueOf(480.56)));
+		assertThat(account.getAccountNumber(), equalTo(444555666L));
+		assertThat(account.getCustomerName(), equalTo("Gautvin Marianne"));
+		assertThat(account.getBalance(), Matchers.comparesEqualTo(BigDecimal.valueOf(600.5d)));
 		assertThat(account.getAccountStatus(), equalTo(AccountStatus.OPEN));
 	}
 
