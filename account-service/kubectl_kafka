@@ -1,0 +1,7 @@
+
+#start consumer
+kubectl -n kafka run kafka-consumer -it   --image=quay.io/strimzi/kafka:0.33.0-kafka-3.3.2   --rm=true --restart=Never   -- bin/kafka-console-consumer.sh   --bootstrap-server my-cluster-kafka-bootstrap.kafka:9092   --topic account-fee   --from-beginning
+
+#delete consumer
+
+kubectl delete pod kafka-consumer -n kafka
