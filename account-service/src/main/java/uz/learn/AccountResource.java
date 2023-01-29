@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 
 import javax.inject.Inject;
 import javax.json.Json;
@@ -29,17 +30,20 @@ import javax.ws.rs.ext.Provider;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.smallrye.reactive.messaging.annotations.Blocking;
 import uz.learn.objects.Account;
-import uz.learn.objects.AccountStatus;
 import uz.learn.objects.OverdraftLimitUpdate;
 import uz.learn.objects.Overdrawn;
 import uz.learn.repository.AccountRepository;
 
 @Path("/accounts")
 public class AccountResource {
-
+	
+	private static Logger log = LoggerFactory.getLogger(AccountResource.class);
+	
 	@Inject
 	AccountRepository accountRepository;
 
@@ -76,7 +80,7 @@ public class AccountResource {
 			throw new WebApplicationException("Account with " + accountNumber + " does not exist.", 404);
 		}
 
-		if (entity.getAccountStatus().equals(AccountStatus.OVERDRAWN)) {
+		if (!entity.isWithdrawalPossible()) {
 			throw new WebApplicationException("Account is overdrawn, no further withdrawals permitted", 409);
 		}
 
@@ -110,10 +114,9 @@ public class AccountResource {
 	@PUT
 	@Path("/{accountNumber}/withdrawal")
 	@Transactional
-	public Account withdrawal(@PathParam("accountNumber") Long accountNumber, String amount) {
+	public CompletionStage<Account> withdrawal(@PathParam("accountNumber") Long accountNumber, String amount) {
 		Account entity = getAccount(accountNumber);
-		if (entity.getAccountStatus() == AccountStatus.OVERDRAWN
-				&& entity.getBalance().compareTo(entity.getOverdraftLimit()) <= 0) {
+		if (!entity.isWithdrawalPossible()) {
 			throw new WebApplicationException("Account is overdrawn, no further withdrawals permitted", 409);
 		}
 		entity.withdrawFunds(new BigDecimal(amount));
@@ -122,10 +125,11 @@ public class AccountResource {
 			entity.markOverdrawn();
 			Overdrawn payload = new Overdrawn(entity.getAccountNumber(), entity.getCustomerNumber(),
 					entity.getBalance(), entity.getOverdraftLimit());
-			emitter.send(payload)
-			.thenCompose(empty->CompletableFuture.completedFuture(entity)); //?
+			log.warn("Account overdrawn, payload={}", payload);
+			return emitter.send(payload).thenCompose(empty -> CompletableFuture.completedFuture(entity));
 		}
-		return entity;
+		accountRepository.persist(entity);
+		return CompletableFuture.completedStage(entity);
 	}
 
 	@PUT
@@ -144,7 +148,7 @@ public class AccountResource {
 		accountRepository.delete(accountRepository.findByAccountNumber(accountNumber));
 		return Response.noContent().build();
 	}
-	
+
 	@Incoming("overdraft-update")
 	@Transactional
 	@Blocking
@@ -152,6 +156,7 @@ public class AccountResource {
 		Account entity = accountRepository.findByAccountNumber(overdraftLimitUpdate.getAccountNumber());
 		entity.setOverdraftLimit(overdraftLimitUpdate.getNewOverDraftLimit());
 	}
+
 	@Provider
 	public static class ErrorMapper implements ExceptionMapper<Exception> {
 

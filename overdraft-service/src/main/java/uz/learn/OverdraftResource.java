@@ -16,6 +16,8 @@ import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.reactive.messaging.Message;
 import org.eclipse.microprofile.reactive.messaging.Outgoing;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import uz.learn.events.OverdraftLimitUpdate;
 import uz.learn.events.Overdrawn;
@@ -24,6 +26,7 @@ import uz.learn.models.CustomerOverdraft;
 
 @Path("/overdraft")
 public class OverdraftResource {
+	private static Logger log = LoggerFactory.getLogger(OverdraftResource.class);
 
 	private Map<Long, CustomerOverdraft> customerOverdrafts = new HashMap<>();
 
@@ -34,6 +37,7 @@ public class OverdraftResource {
 	@Incoming("account-overdrawn")
 	@Outgoing("customer-overdrafts")
 	public Message<Overdrawn> overdraftNotification(Message<Overdrawn> message) {
+		log.info("Account overdrawn message consumed");
 		Overdrawn payload = message.getPayload();
 		CustomerOverdraft customerOverdraft = customerOverdrafts.computeIfAbsent(payload.getCustomerNumber(), key -> {
 			CustomerOverdraft overdraft = new CustomerOverdraft();

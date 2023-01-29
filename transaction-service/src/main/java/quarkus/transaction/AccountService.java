@@ -7,6 +7,7 @@ import java.util.concurrent.CompletionStage;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -38,6 +39,10 @@ public interface AccountService {
 	@Path("/{accountNumber}/balance")
 	BigDecimal getBalance(@PathParam("accountNumber") Long accountNumber);
 	
+	@PUT
+	@Path("/{accountNumber}/withdrawal")
+	BigDecimal withdraw(@PathParam("accountNumber") Long accountNumber, BigDecimal amount);
+	
 	@POST
 	@Path("/{accountNumber}/transaction")
 	@ClientHeaderParam(name = "method-lvl-param", value = "{generated}")
@@ -47,4 +52,6 @@ public interface AccountService {
 	default String generated() {
 		return "Value generated for method async call";
 	}
+	
+
 }
