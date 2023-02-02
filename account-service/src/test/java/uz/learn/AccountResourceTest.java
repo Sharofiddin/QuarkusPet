@@ -26,8 +26,8 @@ import io.quarkus.test.h2.H2DatabaseTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
-import uz.learn.objects.Account;
-import uz.learn.objects.AccountStatus;
+import quarkus.accounts.objects.Account;
+import quarkus.accounts.objects.AccountStatus;
 
 @QuarkusTest
 @QuarkusTestResource(value = H2DatabaseTestResource.class)

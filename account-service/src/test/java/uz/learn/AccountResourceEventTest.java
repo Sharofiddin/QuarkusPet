@@ -19,10 +19,10 @@ import io.restassured.http.ContentType;
 import io.smallrye.reactive.messaging.providers.connectors.InMemoryConnector;
 import io.smallrye.reactive.messaging.providers.connectors.InMemorySink;
 import io.smallrye.reactive.messaging.providers.connectors.InMemorySource;
-import uz.learn.objects.Account;
-import uz.learn.objects.AccountStatus;
-import uz.learn.objects.OverdraftLimitUpdate;
-import uz.learn.objects.Overdrawn;
+import quarkus.accounts.objects.Account;
+import quarkus.accounts.objects.AccountStatus;
+import quarkus.accounts.objects.OverdraftLimitUpdate;
+import quarkus.accounts.objects.Overdrawn;
 
 @QuarkusTest
 @QuarkusTestResource(InMemoryLifeCycleManager.class)

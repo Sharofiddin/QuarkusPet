@@ -1,9 +1,9 @@
-package uz.learn.repository;
+package quarkus.accounts.repository;
 
 import javax.enterprise.context.ApplicationScoped;
 
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
-import uz.learn.objects.Account;
+import quarkus.accounts.objects.Account;
 
 @ApplicationScoped
 public class AccountRepository implements PanacheRepository<Account>{

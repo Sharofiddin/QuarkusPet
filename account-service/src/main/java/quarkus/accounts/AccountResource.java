@@ -1,4 +1,4 @@
-package uz.learn;
+package quarkus.accounts;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -34,10 +34,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.smallrye.reactive.messaging.annotations.Blocking;
-import uz.learn.objects.Account;
-import uz.learn.objects.OverdraftLimitUpdate;
-import uz.learn.objects.Overdrawn;
-import uz.learn.repository.AccountRepository;
+import quarkus.accounts.objects.Account;
+import quarkus.accounts.objects.OverdraftLimitUpdate;
+import quarkus.accounts.objects.Overdrawn;
+import quarkus.accounts.repository.AccountRepository;
 
 @Path("/accounts")
 public class AccountResource {

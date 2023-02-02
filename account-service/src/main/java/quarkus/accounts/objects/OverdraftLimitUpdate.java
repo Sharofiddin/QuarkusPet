@@ -1,4 +1,4 @@
-package uz.learn.objects;
+package quarkus.accounts.objects;
 
 import java.math.BigDecimal;
 

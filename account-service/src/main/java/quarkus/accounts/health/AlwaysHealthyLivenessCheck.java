@@ -1,4 +1,4 @@
-package uz.learn.health;
+package quarkus.accounts.health;
 
 import java.util.Date;
 
