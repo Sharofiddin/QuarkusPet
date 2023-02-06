@@ -31,7 +31,7 @@ spec:
       - default
   selector:
     matchLabels:
-      app.kubernetes.io: account-service
+      app.kubernetes.io/name: account-service
   endpoints:
     - port: http
       interval: 3s
