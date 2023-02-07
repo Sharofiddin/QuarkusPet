@@ -1,16 +1,26 @@
 package quarkus.transaction.exception;
 
+import javax.inject.Inject;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import org.eclipse.microprofile.faulttolerance.ExecutionContext;
 import org.eclipse.microprofile.faulttolerance.FallbackHandler;
+import org.eclipse.microprofile.metrics.MetricRegistry;
+import org.eclipse.microprofile.metrics.MetricRegistry.Type;
+import org.eclipse.microprofile.metrics.Tag;
+import org.eclipse.microprofile.metrics.annotation.RegistryType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
 public class TransactionServiceFallbackHandler implements FallbackHandler<Response> {
 	private static Logger log = LoggerFactory.getLogger(TransactionServiceFallbackHandler.class);
-
+	
+	@Inject
+	@RegistryType(type = Type.APPLICATION)
+	MetricRegistry metricRegistry;
+	
 	@Override
 	public Response handle(ExecutionContext context) {
 		Response response = null;
@@ -39,6 +49,7 @@ public class TransactionServiceFallbackHandler implements FallbackHandler<Respon
 			response = Response.status(Status.NOT_IMPLEMENTED).build();
 			break;
 		}
+			metricRegistry.counter("fallback", new Tag("http_status_code", ""+response.getStatus())).inc();
 			log.info("******** {} : {} *******" , context.getMethod().getName() , name );
 			return response;
 		}
