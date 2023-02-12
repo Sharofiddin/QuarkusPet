@@ -508,26 +508,26 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "avg(application_io_quarkus_transactions_TransactionResource_deposits{quantile=\"0.5\"})",
+          "expr": "avg(application_quarkus_transaction_TransactionResource_deposits{quantile=\"0.5\"})",
           "interval": "",
           "legendFormat": "Quantile .5",
           "queryType": "randomWalk",
           "refId": "A"
         },
         {
-          "expr": "avg(application_io_quarkus_transactions_TransactionResource_deposits{quantile=\"0.75\"})",
+          "expr": "avg(application_quarkus_transaction_TransactionResource_deposits{quantile=\"0.75\"})",
           "interval": "",
           "legendFormat": "Quantile .75",
           "refId": "B"
         },
         {
-          "expr": "avg(application_io_quarkus_transactions_TransactionResource_deposits{quantile=\"0.95\"})",
+          "expr": "avg(application_quarkus_transaction_TransactionResource_deposits{quantile=\"0.95\"})",
           "interval": "",
           "legendFormat": "Quantile .95",
           "refId": "C"
         },
         {
-          "expr": "avg(application_io_quarkus_transactions_TransactionResource_deposits{quantile=\"0.99\"})",
+          "expr": "avg(application_quarkus_transaction_TransactionResource_deposits{quantile=\"0.99\"})",
           "interval": "",
           "legendFormat": "Quantile .99",
           "refId": "D"

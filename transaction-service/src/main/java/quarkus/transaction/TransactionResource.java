@@ -30,6 +30,9 @@ import org.eclipse.microprofile.faulttolerance.Fallback;
 import org.eclipse.microprofile.faulttolerance.Retry;
 import org.eclipse.microprofile.faulttolerance.Timeout;
 import org.eclipse.microprofile.faulttolerance.exceptions.TimeoutException;
+import org.eclipse.microprofile.metrics.Histogram;
+import org.eclipse.microprofile.metrics.annotation.ConcurrentGauge;
+import org.eclipse.microprofile.metrics.annotation.Metric;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
 import org.eclipse.microprofile.rest.client.RestClientDefinitionException;
@@ -53,12 +56,22 @@ public class TransactionResource {
 	private static Logger log = LoggerFactory.getLogger(TransactionResource.class);
 	
 	@Inject
+	@Metric(name="deposits", 
+	description="Deposit histogram")
+	Histogram depositHistogram;
+	
+	@Inject
 	@RestClient
 	AccountService accountService;
 
 	@Inject
 	TransactionRepository transactionRepository;
-
+	
+	void updateDespositHistogram(BigDecimal dollars) {
+		depositHistogram.update(dollars.longValue());
+		log.info("histogram: {}", depositHistogram.getSum());
+	}
+	
 	@GET
 	@Path("/")
 	public List<Transaction> getAllTransactions() {
@@ -67,12 +80,19 @@ public class TransactionResource {
 
 	@POST
 	@Path("/{accountNumber}")
+	@ConcurrentGauge(
+			name = "concurrentBlockingTransactions",
+			absolute = true,
+			description = "Number of concurrent transactions using blocking API"
+			)
+	
 	@Transactional
 	public Map<String, List<String>> newTransaction(@PathParam("accountNumber") Long accountNumber, BigDecimal amount) {
 		Transaction transaction = createNewTransaction(accountNumber, amount);
 		try {
 			Map<String, List<String>> transactionResponse = accountService.transact(accountNumber, amount);
 			transaction.makeSucces();
+			updateDespositHistogram(amount);
 			return transactionResponse;
 		} catch (Exception e) {
 			log.error("Exception", e);
@@ -89,6 +109,7 @@ public class TransactionResource {
 		CompletionStage<Map<String, List<String>>> response = accountService.transactAsync(accountNumber, amount)
 				.exceptionallyAsync(e -> makeError(e, transaction));
 		transaction.makeSucces();
+		updateDespositHistogram(amount);
 		return response;
 	}
 
@@ -107,6 +128,7 @@ public class TransactionResource {
 				.register(AccountRequestFilter.class).build(AccountServiceProgrammatic.class);
 		String reponse = accountServiceProgrammatic.transact(accountNumber, amount);
 		transaction.makeSucces();
+		updateDespositHistogram(amount);
 		return Response.ok(reponse).build();
 	}
 
@@ -118,6 +140,7 @@ public class TransactionResource {
 			throws IllegalStateException, RestClientDefinitionException, MalformedURLException {
 		Transaction transaction = createNewTransaction(accountNumber, amount);
 		transaction.setStatus(TransactionStatus.SUCCESS);
+		updateDespositHistogram(amount);
 		AccountServiceProgrammatic accountServiceProgrammatic = RestClientBuilder.newBuilder()
 				.baseUrl(new URL(accountServiceUrl)).connectTimeout(500, TimeUnit.MILLISECONDS)
 				.readTimeout(1500, TimeUnit.MILLISECONDS).register(AccountRequestFilter.class)

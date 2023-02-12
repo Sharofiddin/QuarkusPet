@@ -8,8 +8,10 @@ import org.eclipse.microprofile.faulttolerance.ExecutionContext;
 import org.eclipse.microprofile.faulttolerance.FallbackHandler;
 import org.eclipse.microprofile.metrics.MetricRegistry;
 import org.eclipse.microprofile.metrics.MetricRegistry.Type;
+import org.eclipse.microprofile.metrics.MetricUnits;
 import org.eclipse.microprofile.metrics.Tag;
 import org.eclipse.microprofile.metrics.annotation.RegistryType;
+import org.eclipse.microprofile.metrics.annotation.Timed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,6 +23,11 @@ public class TransactionServiceFallbackHandler implements FallbackHandler<Respon
 	@RegistryType(type = Type.APPLICATION)
 	MetricRegistry metricRegistry;
 	
+	@Timed(name = "fallbackHandlerTimer",
+			absolute = true,
+			description = "Timer spent handling fallbacks",
+					displayName ="Fallback handler timer",
+					unit = MetricUnits.NANOSECONDS)
 	@Override
 	public Response handle(ExecutionContext context) {
 		Response response = null;
