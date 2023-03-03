@@ -9,14 +9,14 @@ ACCOUNT_URL=`minikube service --url account-service`
 
 while [ 1 ];
 do
-  metrics/scripts/concurrent.sh
-  metrics/scripts/force_multiple_fallbacks.sh
-  metrics/scripts/invoke_deposit_endpoints.sh
-  metrics/scripts/overload_bulkhead.sh
+  ./concurrent.sh
+  ./force_multiple_fallbacks.sh
+  ./invoke_deposit_endpoints.sh
+  ./overload_bulkhead.sh
 
   count=0
 
   while (( count++ < 15 )); do
-  curl -i $ACCOUNT_URL/accounts/234/balance
+  curl -i $ACCOUNT_URL/accounts/745/balance
   done
 done
