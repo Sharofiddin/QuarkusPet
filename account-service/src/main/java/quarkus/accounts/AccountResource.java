@@ -27,14 +27,14 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
+import org.eclipse.microprofile.metrics.Counter;
+import org.eclipse.microprofile.metrics.annotation.Metric;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Tags;
 import io.smallrye.reactive.messaging.annotations.Blocking;
 import quarkus.accounts.objects.Account;
 import quarkus.accounts.objects.OverdraftLimitUpdate;
@@ -163,15 +163,12 @@ public class AccountResource {
 	@Provider
 	public static class ErrorMapper implements ExceptionMapper<Exception> {
 		
-		private MeterRegistry registry;
-		
-		public ErrorMapper(MeterRegistry meterRegistry) {
-			this.registry = meterRegistry;
-		}
+		@Metric(name = "ErrorMapperCounter", description = "Number of times AccountResource ErrorMapper is invoked")
+		Counter counter;
 		
 		@Override
 		public Response toResponse(Exception exception) {
-			registry.counter("ErrorMapperCounter", Tags.empty()).increment();
+			counter.inc();
 			int code = 500;
 			if (exception instanceof WebApplicationException webException) {
 				code = webException.getResponse().getStatus();
