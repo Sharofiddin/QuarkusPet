@@ -16,6 +16,7 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -42,7 +43,9 @@ import org.slf4j.LoggerFactory;
 
 import quarkus.transaction.events.AccountFee;
 import quarkus.transaction.exception.AccountExceptionMapper;
+import quarkus.transaction.exception.AccountNotFoundException;
 import quarkus.transaction.exception.TransactionServiceFallbackHandler;
+import quarkus.transaction.object.Account;
 import quarkus.transaction.object.Transaction;
 import quarkus.transaction.object.TransactionStatus;
 import quarkus.transaction.repository.TransactionRepository;
@@ -191,5 +194,21 @@ public class TransactionResource {
 	public Response timeoutFallbackGetBalance(Long accountNumber) {
 		return Response.status(Status.GATEWAY_TIMEOUT).build();
 	}
-
+	
+	@Path("/{acctNumber}/withdrawal")
+	@PUT
+	public Account withdrawal(@PathParam("acctNumber") Long accountNumber, String amount) throws AccountNotFoundException {
+		return accountService.withdrawal(accountNumber, amount);
+	}
+	
+	@Path("/{acctNumber}/deposit")
+	@PUT
+	public Response deposit(@PathParam("acctNumber") Long accountNumber, String amount)  {
+		try {
+			accountService.deposit(accountNumber, amount);
+			return Response.ok().build();
+		} catch (AccountNotFoundException e) {
+			return Response.serverError().entity(e).build();
+		}
+	}
 }

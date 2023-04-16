@@ -20,6 +20,7 @@ import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
 import quarkus.transaction.exception.AccountExceptionMapper;
 import quarkus.transaction.exception.AccountNotFoundException;
+import quarkus.transaction.object.Account;
 
 @Path("/accounts")
 @RegisterRestClient(configKey = "account-service")
@@ -34,15 +35,19 @@ public interface AccountService {
 	@Path("/{accountNumber}/transaction")
 	Map<String, List<String>> transact(@PathParam("accountNumber") Long accountNumber, BigDecimal amount)
 			throws AccountNotFoundException;
-	
+
 	@GET
 	@Path("/{accountNumber}/balance")
 	BigDecimal getBalance(@PathParam("accountNumber") Long accountNumber);
-	
+
 	@PUT
 	@Path("/{accountNumber}/withdrawal")
-	BigDecimal withdraw(@PathParam("accountNumber") Long accountNumber, BigDecimal amount);
-	
+	Account withdrawal(@PathParam("accountNumber") Long accountNumber, String amount) throws AccountNotFoundException;
+
+	@PUT
+	@Path("/{accountNumber}/deposit")
+	Account deposit(@PathParam("accountNumber") Long accountNumber, String amount) throws AccountNotFoundException;
+
 	@POST
 	@Path("/{accountNumber}/transaction")
 	@ClientHeaderParam(name = "method-lvl-param", value = "{generated}")
@@ -52,6 +57,5 @@ public interface AccountService {
 	default String generated() {
 		return "Value generated for method async call";
 	}
-	
 
 }
